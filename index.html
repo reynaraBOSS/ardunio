@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Свой бизнесмен</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, #1e1b4b, #020617 70%);
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+body::before {
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(1px 1px at 10% 20%,#fff,transparent),
+      radial-gradient(1px 1px at 70% 30%,#fff,transparent),
+      radial-gradient(1px 1px at 40% 80%,#fff,transparent);
+    opacity:.5;
+}
+.container {
+    width:100%;
+    max-width:420px;
+    padding:20px;
+    z-index:1;
+}
+.card {
+    background:rgba(15,23,42,.75);
+    border-radius:20px;
+    padding:25px;
+    backdrop-filter:blur(8px);
+    animation:fade .4s ease;
+}
+@keyframes fade {
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:none}
+}
+.progress{opacity:.7;margin-bottom:15px}
+.question{font-size:20px;margin-bottom:20px}
+.answers button{
+    width:100%;margin:8px 0;padding:15px;
+    border:none;border-radius:14px;
+    background:linear-gradient(135deg,#7c3aed,#4c1d95);
+    color:#fff;font-size:16px;cursor:pointer;
+}
+.answers button:hover{transform:scale(1.03)}
+.result img{width:100%;border-radius:16px;margin:15px 0}
+.action-btn{
+    width:100%;padding:15px;margin-top:10px;
+    border:none;border-radius:14px;font-size:16px;
+}
+.download{background:#22c55e;color:#fff}
+.restart{background:#1e293b;color:#fff}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div id="app"></div>
+</div>
+
+<script>
+const questions = [
+{
+ text:"Как ты реагируешь на риск?",
+ answers:[
+  {text:"Люблю риск и адреналин",type:0},
+  {text:"Рассчитываю возможные последствия",type:1},
+  {text:"Стараюсь избегать риска",type:2}
+ ]
+},
+{
+ text:"Какой стиль управления тебе ближе?",
+ answers:[
+  {text:"Жёстко контролирую всё сам",type:0},
+  {text:"Делегирую и выстраиваю систему",type:1},
+  {text:"Предпочитаю мягкое руководство",type:2}
+ ]
+},
+{
+ text:"Что для тебя важнее при запуске бизнеса?",
+ answers:[
+  {text:"Скорость выхода на рынок",type:0},
+  {text:"Чёткий план и стратегия",type:1},
+  {text:"Минимальные потери",type:2}
+ ]
+},
+{
+ text:"Как ты относишься к долгам?",
+ answers:[
+  {text:"Если нужно — беру без сомнений",type:0},
+  {text:"Только при чётком расчёте",type:1},
+  {text:"Предпочитаю обходиться без них",type:2}
+ ]
+},
+{
+ text:"Как ты масштабируешь бизнес?",
+ answers:[
+  {text:"Резко и быстро",type:0},
+  {text:"Постепенно и контролируемо",type:1},
+  {text:"Очень осторожно",type:2}
+ ]
+},
+{
+ text:"Что ты делаешь при неудаче?",
+ answers:[
+  {text:"Сразу пробую снова",type:0},
+  {text:"Анализирую ошибки",type:1},
+  {text:"Делаю паузу",type:2}
+ ]
+},
+{
+ text:"Как ты принимаешь важные решения?",
+ answers:[
+  {text:"Интуитивно",type:0},
+  {text:"На основе данных",type:1},
+  {text:"Советуюсь с другими",type:2}
+ ]
+},
+{
+ text:"Твой идеальный формат бизнеса?",
+ answers:[
+  {text:"Стартап с быстрым ростом",type:0},
+  {text:"Устойчивый системный бизнес",type:1},
+  {text:"Инвестиции и пассивный доход",type:2}
+ ]
+},
+{
+ text:"Как ты относишься к конкуренции?",
+ answers:[
+  {text:"Давлю и вытесняю",type:0},
+  {text:"Ищу своё уникальное место",type:1},
+  {text:"Стараюсь избегать конфликтов",type:2}
+ ]
+},
+{
+ text:"Как ты выбираешь партнёров?",
+ answers:[
+  {text:"Быстро, по ощущениям",type:0},
+  {text:"По репутации и цифрам",type:1},
+  {text:"Очень долго и осторожно",type:2}
+ ]
+},
+{
+ text:"На какой срок ты планируешь?",
+ answers:[
+  {text:"Ближайшие месяцы",type:0},
+  {text:"1–3 года",type:1},
+  {text:"5 лет и больше",type:2}
+ ]
+},
+{
+ text:"Что для тебя важнее всего?",
+ answers:[
+  {text:"Рост прибыли",type:0},
+  {text:"Стабильность бизнеса",type:1},
+  {text:"Комфорт и безопасность",type:2}
+ ]
+},
+{
+ text:"Как ты нанимаешь сотрудников?",
+ answers:[
+  {text:"По скорости и эффективности",type:0},
+  {text:"По компетенциям и опыту",type:1},
+  {text:"По надёжности",type:2}
+ ]
+},
+{
+ text:"Как ты относишься к автоматизации?",
+ answers:[
+  {text:"Максимально внедряю",type:0},
+  {text:"Использую там, где выгодно",type:1},
+  {text:"С осторожностью",type:2}
+ ]
+},
+{
+ text:"Какой рынок тебе ближе?",
+ answers:[
+  {text:"Онлайн и технологии",type:0},
+  {text:"Смешанный формат",type:1},
+  {text:"Офлайн-бизнес",type:2}
+ ]
+},
+{
+ text:"Что тебя мотивирует больше всего?",
+ answers:[
+  {text:"Деньги и рост",type:0},
+  {text:"Влияние и статус",type:1},
+  {text:"Свобода и спокойствие",type:2}
+ ]
+},
+{
+ text:"Как ты реагируешь на стресс?",
+ answers:[
+  {text:"Давлю дальше",type:0},
+  {text:"Собираюсь и контролирую",type:1},
+  {text:"Снижаю нагрузку",type:2}
+ ]
+},
+{
+ text:"Как ты относишься к ошибкам?",
+ answers:[
+  {text:"Это часть пути",type:0},
+  {text:"Это источник опыта",type:1},
+  {text:"Стараюсь не допускать",type:2}
+ ]
+},
+{
+ text:"Как ты обучаешься?",
+ answers:[
+  {text:"Через практику",type:0},
+  {text:"Через книги и курсы",type:1},
+  {text:"Через наставников",type:2}
+ ]
+},
+{
+ text:"Как ты ведёшь переговоры?",
+ answers:[
+  {text:"Жёстко и напористо",type:0},
+  {text:"Гибко и аргументированно",type:1},
+  {text:"Осторожно",type:2}
+ ]
+},
+{
+ text:"Как ты относишься к инновациям?",
+ answers:[
+  {text:"Внедряю первым",type:0},
+  {text:"Тестирую после проверки",type:1},
+  {text:"Жду, пока станет безопасно",type:2}
+ ]
+},
+{
+ text:"Как ты принимаешь критику?",
+ answers:[
+  {text:"Игнорирую",type:0},
+  {text:"Анализирую",type:1},
+  {text:"Принимаю близко к сердцу",type:2}
+ ]
+},
+{
+ text:"Что для тебя важнее в деньгах?",
+ answers:[
+  {text:"Рост капитала",type:0},
+  {text:"Контроль финансов",type:1},
+  {text:"Финансовая подушка",type:2}
+ ]
+},
+{
+ text:"Какой ты лидер?",
+ answers:[
+  {text:"Доминирующий",type:0},
+  {text:"Стратегический",type:1},
+  {text:"Поддерживающий",type:2}
+ ]
+},
+{
+ text:"Главная цель твоего бизнеса?",
+ answers:[
+  {text:"Создать империю",type:0},
+  {text:"Построить устойчивую систему",type:1},
+  {text:"Обеспечить спокойную жизнь",type:2}
+ ]
+}
+];
+
+
+let index=0;
+let userAnswers=[];
+const app=document.getElementById("app");
+
+function render(){
+    const q=questions[index];
+    app.innerHTML=`
+    <div class="card">
+        <div class="progress">Вопрос ${index+1} из 25</div>
+        <div class="question">${q.text}</div>
+        <div class="answers">
+            ${q.answers.map((a,i)=>`<button onclick="answer(${i})">${a.text}</button>`).join("")}
+        </div>
+    </div>`;
+}
+
+function answer(v){
+    userAnswers.push(v);
+    index++;
+    index<25?render():result();
+}
+
+/* ПРОФИЛИ */
+const profiles = {
+ startup:   Array(25).fill(0),
+ strategist:Array(25).fill(1),
+ investor: Array(25).fill(2),
+ leader:   [1,1,0,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+ legend:   [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0]
+};
+
+function similarity(a,b){
+    return a.reduce((s,v,i)=>s+(v===b[i]?1:0),0);
+}
+
+function result(){
+    const scores={
+        startup:similarity(userAnswers,profiles.startup),
+        strategist:similarity(userAnswers,profiles.strategist),
+        investor:similarity(userAnswers,profiles.investor),
+        leader:similarity(userAnswers,profiles.leader),
+        legend:similarity(userAnswers,profiles.legend)
+    };
+
+    const best=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+
+    const data={
+        startup:{
+            n:"Агрессивный стартапер",
+            d:"Ты действуешь быстро, принимаешь риск и предпочитаешь захватывать рынок первым. Ты не боишься ошибок и используешь хаос как топливо для роста.",
+            i:"image1.jpg"
+        },
+        strategist:{
+            n:"Хладнокровный стратег",
+            d:"Ты видишь бизнес как систему. Ты выстраиваешь долгосрочные планы и минимизируешь риски через аналитику и расчёт.",
+            i:"image2.jpg"
+        },
+        investor:{
+            n:"Инвестор-аналитик",
+            d:"Ты терпелив и расчётлив. Для тебя бизнес — это капитал, время и правильные точки входа.",
+            i:"image3.jpg"
+        },
+        leader:{
+            n:"Корпоративный лидер",
+            d:"Ты силён в управлении людьми и процессами. Ты строишь масштабные структуры и умеешь удерживать контроль.",
+            i:"image4.jpg"
+        },
+        legend:{
+            n:"Бизнес-легенда",
+            d:"Ты совмещаешь риск, стратегию и масштаб. Ты видишь картину целиком и создаёшь правила игры.",
+            i:"image5.jpg"
+        }
+    };
+
+    const b=data[best];
+    app.innerHTML=`
+    <div class="card result">
+        <h2>${b.n}</h2>
+        <img src="${b.i}">
+        <p>${b.d}</p>
+        <button class="action-btn download" onclick="download('${b.i}')">Скачать картинку</button>
+        <button class="action-btn restart" onclick="restart()">Пройти заново</button>
+    </div>`;
+}
+
+function download(src){
+    const a=document.createElement("a");
+    a.href=src;a.download=src;a.click();
+}
+function restart(){
+    index=0;userAnswers=[];render();
+}
+
+render();
+</script>
+</body>
+</html>
